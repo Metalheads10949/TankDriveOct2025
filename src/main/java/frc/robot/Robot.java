@@ -7,7 +7,7 @@ package frc.robot;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.PWMTalonSRX;
 
@@ -17,22 +17,28 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMTalonSRX;
  * this project, you must also update the manifest file in the resource directory.
  */
 public class Robot extends TimedRobot {
-  private final PWMTalonSRX m_leftDrive = new PWMTalonSRX(0);
-  private final PWMTalonSRX m_rightDrive = new PWMTalonSRX(1);
+  private final PWMTalonSRX m_leftLeaderDrive = new PWMTalonSRX(0);
+  private final PWMTalonSRX m_rightLeaderDrive = new PWMTalonSRX(1);
+  private final PWMTalonSRX m_leftFollowerDrive = new PWMTalonSRX(2);
+  private final PWMTalonSRX m_rightFollowerDrive = new PWMTalonSRX(3);
+
   private final DifferentialDrive m_robotDrive =
-      new DifferentialDrive(m_leftDrive::set, m_rightDrive::set);
-  private final XboxController m_controller = new XboxController(0);
+      new DifferentialDrive(m_leftLeaderDrive::set, m_rightLeaderDrive::set);
+
+  private final Joystick m_controller = new Joystick(0);
+
   private final Timer m_timer = new Timer();
 
   /** Called once at the beginning of the robot program. */
   public Robot() {
-    SendableRegistry.addChild(m_robotDrive, m_leftDrive);
-    SendableRegistry.addChild(m_robotDrive, m_rightDrive);
+    SendableRegistry.addChild(m_robotDrive, m_leftLeaderDrive);
+    SendableRegistry.addChild(m_robotDrive, m_rightLeaderDrive);
 
-    // We need to invert one side of the drivetrain so that positive voltages
-    // result in both sides moving forward. Depending on how your robot's
-    // gearbox is constructed, you might have to invert the left side instead.
-    m_rightDrive.setInverted(true);
+    m_leftLeaderDrive.addFollower(m_leftFollowerDrive);
+    m_rightLeaderDrive.addFollower(m_rightFollowerDrive);
+
+    m_leftLeaderDrive.setInverted(false);
+    m_rightLeaderDrive.setInverted(true);
   }
 
   /** This function is run once each time the robot enters autonomous mode. */
@@ -60,14 +66,14 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during teleoperated mode. */
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(-m_controller.getLeftY(), -m_controller.getRightX());
+    m_robotDrive.arcadeDrive(-m_controller.getRawAxis(1), -m_controller.getRawAxis(0));
   }
 
   /** This function is called once each time the robot enters test mode. */
   @Override
   public void testInit() {}
 
-  /** This function is called periodically during test mode. */
+  /** This function is called perioinvedically during test mode. */
   @Override
   public void testPeriodic() {}
 }
